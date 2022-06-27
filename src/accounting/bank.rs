@@ -113,7 +113,8 @@ impl SBanken {
     }
 
     pub fn string_to_date(date: &str) -> Result<NaiveDate, Box<dyn error::Error>> {
-        excel::lib::string_to_date(date, ".").map_err(|e| format!("date str is not valid: {:?}", e))
+        Ok(excel::lib::string_to_date(date, ".")
+            .map_err(|e| format!("date str is not valid: {:?}", e))?)
     }
 }
 

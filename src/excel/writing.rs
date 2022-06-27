@@ -46,7 +46,7 @@ pub fn write(
     date_language: &str,
     date_capitalize: &bool,
 ) -> Result<(), Box<dyn error::Error>> {
-    let book =
+    let mut book =
         file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
     let sheet = book
         .get_sheet_by_name_mut("Kontoutskrift")
@@ -145,7 +145,7 @@ pub fn write(
 pub fn fill_empty_rows(path: &str, range: u32, margin: u32) -> Result<(), Box<dyn error::Error>> {
     let book =
         file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
-    let sheet = book
+    let sheet = mut book
         .get_sheet_by_name_mut("Kontoutskrift")
         .map_err(|e| format!("could not open worksheet 'Kontoutskrift': {:?}", e))?;
 
