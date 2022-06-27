@@ -40,6 +40,6 @@ mod test_settings_lib {
     #[test]
     fn test_get_flash_error() {
         let err: Box<dyn error::Error> = "test".into();
-        assert_eq!(get_flash_error(err), "error: test");
+        assert_eq!(get_flash_error(err), "test");
     }
 }
