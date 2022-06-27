@@ -143,9 +143,9 @@ pub fn write(
 }
 
 pub fn fill_empty_rows(path: &str, range: u32, margin: u32) -> Result<(), Box<dyn error::Error>> {
-    let book =
+    let mut book =
         file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
-    let sheet = mut book
+    let sheet = book
         .get_sheet_by_name_mut("Kontoutskrift")
         .map_err(|e| format!("could not open worksheet 'Kontoutskrift': {:?}", e))?;
 
@@ -172,7 +172,7 @@ pub fn fill_empty_rows(path: &str, range: u32, margin: u32) -> Result<(), Box<dy
         let row_value = sheet
             .get_value(&(String::from("I") + &row.to_string()))
             .parse::<f32>()
-            .map_err(|e| format!("row value is not a float"))?;
+            .map_err(|e| format!("row value is not a float: {:?}", e))?;
         for r in start..end {
             // check if it is valid (accounting date is not empty), if empty, it is finished and break
             if sheet.get_value(&(String::from("A") + &r.to_string())) == "" {
@@ -210,7 +210,7 @@ pub fn fill_empty_rows(path: &str, range: u32, margin: u32) -> Result<(), Box<dy
 }
 
 pub fn re_group(path: &str, categories: &reading::Categories) -> Result<(), Box<dyn error::Error>> {
-    let book =
+    let mut book =
         file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
     let sheet = book
         .get_sheet_by_name_mut("Kontoutskrift")
@@ -271,7 +271,7 @@ pub fn re_date(
     date_language: &str,
     date_capitalize: &bool,
 ) -> Result<(), Box<dyn error::Error>> {
-    let book =
+    let mut book =
         file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
     let sheet = book
         .get_sheet_by_name_mut("Kontoutskrift")
