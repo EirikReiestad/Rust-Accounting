@@ -2,7 +2,6 @@ use super::reading;
 use super::workbook;
 use chrono::NaiveDate;
 use std::error;
-use std::io::{Error, ErrorKind};
 
 pub fn get_month(
     date_nr: u32,

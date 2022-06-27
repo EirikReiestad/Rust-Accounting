@@ -1,6 +1,6 @@
 use super::lib;
 use chrono::NaiveDate;
-use std::io::{Error, ErrorKind};
+use std::error;
 
 #[derive(Debug, PartialEq)]
 pub struct WorkbookInfo {
@@ -26,7 +26,7 @@ impl WorkbookInfo {
         out_of_account: Vec<f64>,
         into_account: Vec<f64>,
         account: Vec<String>,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, Box<dyn error::Error>> {
         // check if all the vectors are equal length
         let date_vec = vec![&accounting_date, &interest_date];
         let string_vec = vec![&archive_reference, &counter_account, &types, &text];
