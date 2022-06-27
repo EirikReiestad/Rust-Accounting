@@ -1,10 +1,10 @@
-use std::io::{Error, ErrorKind};
+use std::error;
 
 use crate::file;
 use file::lib;
 
 // e.g. same_path(("C:/dir/", "test.xlsx"), ("C:/dir/", "empty.xlsx")) should return an Error
-pub fn same_path(path1: &str, path2: &str) -> Result<bool, Error> {
+pub fn same_path(path1: &str, path2: &str) -> Result<bool, Box<dyn error::Error>> {
     let p1 = match lib::valid_file(path1) {
         Ok(p1) => (p1, true),
         Err(_) => (String::new(), false),
@@ -15,7 +15,7 @@ pub fn same_path(path1: &str, path2: &str) -> Result<bool, Error> {
     };
 
     if !p1.1 && !p2.1 {
-        return Err(Error::new(ErrorKind::NotFound, "could not find path"));
+        return Err("could not find path".into());
     };
     if p1.0 == p2.0 {
         return Ok(true);
@@ -23,7 +23,7 @@ pub fn same_path(path1: &str, path2: &str) -> Result<bool, Error> {
     Ok(false)
 }
 
-pub fn get_flash_error(error: Error) -> String {
+pub fn get_flash_error(error: Box<dyn error::Error>) -> String {
     error.to_string()
 }
 
@@ -39,7 +39,7 @@ mod test_settings_lib {
 
     #[test]
     fn test_get_flash_error() {
-        let err = Error::new(ErrorKind::Other, "error: test");
-        assert_eq!(get_flash_error(err), "error: test");
+        let err: Box<dyn error::Error> = "test".into();
+        assert_eq!(get_flash_error(err), "test");
     }
 }

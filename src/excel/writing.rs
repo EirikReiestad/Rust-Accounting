@@ -1,5 +1,5 @@
 use chrono::Datelike;
-use std::io::{Error, ErrorKind};
+use std::error;
 use umya_spreadsheet::*;
 
 use super::lib;
@@ -18,13 +18,10 @@ pub fn write_to_workbook(
     date_month_style: &str,
     date_language: &str,
     date_capitalize: &bool,
-) -> Result<(), Error> {
+) -> Result<(), Box<dyn error::Error>> {
     match reading::get_transactions(&transaction_path, bank, account) {
         Ok(transaction_info) => {
-            let workbook_info = match reading::get_workbook_transactions(&workbook_path) {
-                Ok(wb) => wb,
-                Err(e) => return Err(e),
-            };
+            let workbook_info = reading::get_workbook_transactions(&workbook_path)?;
             let transaction_info = lib::remove_duplicates(transaction_info, workbook_info);
             write(
                 &workbook_path,
@@ -48,20 +45,12 @@ pub fn write(
     date_month_style: &str,
     date_language: &str,
     date_capitalize: &bool,
-) -> Result<(), Error> {
-    let mut book = match file::lib::open_file(path) {
-        Ok(book) => book,
-        Err(_) => return Err(Error::new(ErrorKind::NotFound, "could not open workbook")),
-    };
-    let sheet = match book.get_sheet_by_name_mut("Kontoutskrift") {
-        Ok(sheet) => sheet,
-        Err(_) => {
-            return Err(Error::new(
-                ErrorKind::NotFound,
-                "could not open workbook sheet",
-            ))
-        }
-    };
+) -> Result<(), Box<dyn error::Error>> {
+    let mut book =
+        file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
+    let sheet = book
+        .get_sheet_by_name_mut("Kontoutskrift")
+        .map_err(|e| format!("could not open worksheet 'Kontoutskrift': {:?}", e))?;
 
     // start on the first empty line
     let mut row = reading::get_first_empty_line(sheet);
@@ -153,20 +142,12 @@ pub fn write(
     Ok(())
 }
 
-pub fn fill_empty_rows(path: &str, range: u32, margin: u32) -> Result<(), Error> {
-    let mut book = match file::lib::open_file(path) {
-        Ok(book) => book,
-        Err(_) => return Err(Error::new(ErrorKind::NotFound, "could not open workbook")),
-    };
-    let sheet = match book.get_sheet_by_name_mut("Kontoutskrift") {
-        Ok(sheet) => sheet,
-        Err(_) => {
-            return Err(Error::new(
-                ErrorKind::NotFound,
-                "could not open workbook sheet",
-            ))
-        }
-    };
+pub fn fill_empty_rows(path: &str, range: u32, margin: u32) -> Result<(), Box<dyn error::Error>> {
+    let mut book =
+        file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
+    let sheet = book
+        .get_sheet_by_name_mut("Kontoutskrift")
+        .map_err(|e| format!("could not open worksheet 'Kontoutskrift': {:?}", e))?;
 
     // Start on row 2
     let mut row = 1;
@@ -188,13 +169,10 @@ pub fn fill_empty_rows(path: &str, range: u32, margin: u32) -> Result<(), Error>
         }
         let end = row as i32 + range as i32;
 
-        let row_value = match sheet
+        let row_value = sheet
             .get_value(&(String::from("I") + &row.to_string()))
             .parse::<f32>()
-        {
-            Ok(value) => value,
-            Err(_) => return Err(Error::new(ErrorKind::InvalidData, "value is not a float")),
-        };
+            .map_err(|e| format!("row value is not a float: {:?}", e))?;
         for r in start..end {
             // check if it is valid (accounting date is not empty), if empty, it is finished and break
             if sheet.get_value(&(String::from("A") + &r.to_string())) == "" {
@@ -231,20 +209,12 @@ pub fn fill_empty_rows(path: &str, range: u32, margin: u32) -> Result<(), Error>
     Ok(())
 }
 
-pub fn re_group(path: &str, categories: &reading::Categories) -> Result<(), Error> {
-    let mut book = match file::lib::open_file(path) {
-        Ok(book) => book,
-        Err(_) => return Err(Error::new(ErrorKind::NotFound, "could not open workbook")),
-    };
-    let sheet = match book.get_sheet_by_name_mut("Kontoutskrift") {
-        Ok(sheet) => sheet,
-        Err(_) => {
-            return Err(Error::new(
-                ErrorKind::NotFound,
-                "could not open workbook sheet",
-            ))
-        }
-    };
+pub fn re_group(path: &str, categories: &reading::Categories) -> Result<(), Box<dyn error::Error>> {
+    let mut book =
+        file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
+    let sheet = book
+        .get_sheet_by_name_mut("Kontoutskrift")
+        .map_err(|e| format!("could not open worksheet 'Kontoutskrift': {:?}", e))?;
     // start on row 2
     let mut row = 1;
     loop {
@@ -300,20 +270,12 @@ pub fn re_date(
     date_month_style: &str,
     date_language: &str,
     date_capitalize: &bool,
-) -> Result<(), Error> {
-    let mut book = match file::lib::open_file(path) {
-        Ok(book) => book,
-        Err(_) => return Err(Error::new(ErrorKind::NotFound, "could not open workbook")),
-    };
-    let sheet = match book.get_sheet_by_name_mut("Kontoutskrift") {
-        Ok(sheet) => sheet,
-        Err(_) => {
-            return Err(Error::new(
-                ErrorKind::NotFound,
-                "could not open workbook sheet",
-            ))
-        }
-    };
+) -> Result<(), Box<dyn error::Error>> {
+    let mut book =
+        file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
+    let sheet = book
+        .get_sheet_by_name_mut("Kontoutskrift")
+        .map_err(|e| format!("could not open worksheet 'Kontoutskrift': {:?}", e))?;
     // start on row 2
     let mut row = 1;
     loop {

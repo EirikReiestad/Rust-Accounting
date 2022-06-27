@@ -4,7 +4,7 @@ use super::lib;
 use super::workbook;
 use crate::file;
 
-use std::io::{Error, ErrorKind};
+use std::error;
 
 #[derive(Default, Debug)]
 pub struct Categories {
@@ -25,15 +25,12 @@ impl Categories {
     }
 }
 
-pub fn get_categories(path: &str) -> Result<Categories, Error> {
-    let book = match file::lib::open_file(path) {
-        Ok(book) => book,
-        Err(_) => return Err(Error::new(ErrorKind::NotFound, "could not open workbook")),
-    };
-    let sheet = match book.get_sheet_by_name("Kategorier") {
-        Ok(sheet) => sheet,
-        Err(_) => return Err(Error::new(ErrorKind::NotFound, "could not open worksheet")),
-    };
+pub fn get_categories(path: &str) -> Result<Categories, Box<dyn error::Error>> {
+    let book =
+        file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
+    let sheet = book
+        .get_sheet_by_name("Kontoutskrift")
+        .map_err(|e| format!("could not open worksheet 'Kontoutskrift': {:?}", e))?;
 
     let mut from_text = vec![];
     let mut from_type = vec![];
@@ -88,15 +85,12 @@ pub fn get_categories(path: &str) -> Result<Categories, Error> {
 }
 
 // read from spreadsheet file
-pub fn get_accounts(path: &str) -> Result<Vec<accounting::lib::Account>, Error> {
-    let book = match file::lib::open_file(path) {
-        Ok(book) => book,
-        Err(_) => return Err(Error::new(ErrorKind::NotFound, "could not open workbook")),
-    };
-    let sheet = match book.get_sheet_by_name("Informasjon") {
-        Ok(sheet) => sheet,
-        Err(_) => return Err(Error::new(ErrorKind::NotFound, "could not open worksheet")),
-    };
+pub fn get_accounts(path: &str) -> Result<Vec<accounting::lib::Account>, Box<dyn error::Error>> {
+    let book =
+        file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
+    let sheet = book
+        .get_sheet_by_name("Informasjon")
+        .map_err(|e| format!("could not open worksheet 'Informasjon': {:?}", e))?;
 
     let mut accounts = vec![];
     // The account names are in the B file
@@ -129,14 +123,14 @@ pub fn get_transactions(
     path: &str,
     bank: accounting::bank::Bank,
     account: &str,
-) -> Result<workbook::WorkbookInfo, Error> {
+) -> Result<workbook::WorkbookInfo, Box<dyn error::Error>> {
     match bank {
         accounting::bank::Bank::SBanken => {
             match accounting::bank::SBanken::get_transactions(path) {
                 // want to reverse the data (plot the oldest data first)
                 Ok(sbanken) => {
                     let length = sbanken.accounting_date.len();
-                    match workbook::WorkbookInfo::new(
+                    Ok(workbook::WorkbookInfo::new(
                         sbanken.accounting_date.into_iter().rev().collect(),
                         sbanken.interest_date.into_iter().rev().collect(),
                         sbanken.archive_reference.into_iter().rev().collect(),
@@ -146,10 +140,7 @@ pub fn get_transactions(
                         sbanken.out_of_account.into_iter().rev().collect(),
                         sbanken.into_account.into_iter().rev().collect(),
                         vec![String::from(account); length],
-                    ) {
-                        Ok(info) => Ok(info),
-                        Err(e) => Err(e),
-                    }
+                    )?)
                 }
                 Err(e) => Err(e),
             }
@@ -157,20 +148,14 @@ pub fn get_transactions(
     }
 }
 
-pub fn get_workbook_transactions(path: &str) -> Result<workbook::WorkbookInfo, Error> {
-    let book = match file::lib::open_file(path) {
-        Ok(book) => book,
-        Err(_) => return Err(Error::new(ErrorKind::NotFound, "could not open workbook")),
-    };
-    let sheet = match book.get_sheet_by_name("Kontoutskrift") {
-        Ok(sheet) => sheet,
-        Err(_) => {
-            return Err(Error::new(
-                ErrorKind::NotFound,
-                "could not open workbook sheet",
-            ))
-        }
-    };
+pub fn get_workbook_transactions(
+    path: &str,
+) -> Result<workbook::WorkbookInfo, Box<dyn error::Error>> {
+    let book =
+        file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
+    let sheet = book
+        .get_sheet_by_name("Informasjon")
+        .map_err(|e| format!("could not open worksheet 'Informasjon': {:?}", e))?;
 
     let mut accounting_date = vec![];
     let mut interest_date = vec![];
@@ -193,23 +178,16 @@ pub fn get_workbook_transactions(path: &str) -> Result<workbook::WorkbookInfo, E
             break;
         }
         let delimiter = lib::get_delimiter(accounting_date_str);
-        match lib::string_to_date(accounting_date_str, &delimiter) {
-            Ok(s) => accounting_date.push(s),
-            Err(e) => return Err(e),
-        };
+        let s = lib::string_to_date(accounting_date_str, &delimiter)
+            .map_err(|e| format!("accounting date is not valid: {:?}", e))?;
+        accounting_date.push(s);
 
         // interest date
         let interest_date_str = &sheet.get_formatted_value(&(String::from("B") + &row.to_string()));
         let delimiter = lib::get_delimiter(accounting_date_str);
-        match lib::string_to_date(interest_date_str, &delimiter) {
-            Ok(s) => interest_date.push(s),
-            Err(_) => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "interest date is not valid",
-                ))
-            }
-        };
+        let s = lib::string_to_date(interest_date_str, &delimiter)
+            .map_err(|e| format!("interest date is not valid: {:?}", e))?;
+        interest_date.push(s);
 
         archive_reference.push(sheet.get_value(&(String::from("C") + &row.to_string())));
         counter_account.push(sheet.get_value(&(String::from("D") + &row.to_string())));
@@ -217,26 +195,14 @@ pub fn get_workbook_transactions(path: &str) -> Result<workbook::WorkbookInfo, E
         text.push(sheet.get_value(&(String::from("F") + &row.to_string())));
 
         let out_of_account_str = sheet.get_value(&(String::from("G") + &row.to_string()));
-        match out_of_account_str.parse::<f64>() {
-            Ok(f) => out_of_account.push(f),
-            Err(_) => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "could not parse string to f64",
-                ))
-            }
-        };
+        let f = out_of_account_str
+            .parse::<f64>()
+            .map_err(|e| format!("could not parse out of account string to f64: {:?}", e))?;
+        out_of_account.push(f);
 
         let into_account_str = sheet.get_value(&(String::from("H") + &row.to_string()));
-        match into_account_str.parse::<f64>() {
-            Ok(f) => into_account.push(f),
-            Err(_) => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    "could not parse string to f64",
-                ))
-            }
-        };
+        let f = into_account_str.parse::<f64>().map_err(|e| format!("could not parse into account string to f64: {:?}", e))?;
+        into_account.push(f);
 
         let account_str = sheet.get_value(&(String::from("J") + &row.to_string()));
         account.push(account_str);
@@ -244,7 +210,7 @@ pub fn get_workbook_transactions(path: &str) -> Result<workbook::WorkbookInfo, E
         row += 1;
     }
 
-    let workbook = match workbook::WorkbookInfo::new(
+    let workbook = workbook::WorkbookInfo::new(
         accounting_date,
         interest_date,
         archive_reference,
@@ -253,11 +219,7 @@ pub fn get_workbook_transactions(path: &str) -> Result<workbook::WorkbookInfo, E
         text,
         out_of_account,
         into_account,
-        account,
-    ) {
-        Ok(wb) => wb,
-        Err(e) => return Err(e),
-    };
+        account)?;
     Ok(workbook)
 }
 
