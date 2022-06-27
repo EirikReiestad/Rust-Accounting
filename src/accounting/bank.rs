@@ -76,6 +76,7 @@ impl SBanken {
             // interest date
             let interest_date_str =
                 &sheet.get_formatted_value(&(String::from("B") + &row.to_string()));
+                
             match SBanken::string_to_date(interest_date_str) {
                 Ok(s) => interest_date.push(s),
                 Err(_) => {
