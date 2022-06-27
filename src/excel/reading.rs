@@ -193,10 +193,8 @@ pub fn get_workbook_transactions(path: &str) -> Result<workbook::WorkbookInfo, E
             break;
         }
         let delimiter = lib::get_delimiter(accounting_date_str);
-        match lib::string_to_date(accounting_date_str, &delimiter) {
-            Ok(s) => accounting_date.push(s),
-            Err(e) => return Err(e),
-        };
+        let s = lib::string_to_date(accounting_date_str, &delimiter)?;
+        accounting_date.push(s);
 
         // interest date
         let interest_date_str = &sheet.get_formatted_value(&(String::from("B") + &row.to_string()));

@@ -60,23 +60,24 @@ impl SBanken {
             if accounting_date_str == "" {
                 break;
             }
-            match SBanken::string_to_date(accounting_date_str) {
-                Ok(s) => accounting_date.push(s),
-                Err(e) => return Err(e),
-            };
+            let s = SBanken::string_to_date(accounting_date_str).map_err(|e| {
+                format!(
+                    "could not convert accounting date string to date for sbanken transaction: {:?}",
+                    e
+                )
+            })?;
+            accounting_date.push(s);
 
             // interest date
             let interest_date_str =
                 &sheet.get_formatted_value(&(String::from("B") + &row.to_string()));
-            match SBanken::string_to_date(interest_date_str) {
-                Ok(s) => interest_date.push(s),
-                Err(_) => {
-                    return Err(Error::new(
-                        ErrorKind::InvalidData,
-                        "interest date is not valid in bank sheet",
-                    ))
-                }
-            };
+            let s = SBanken::string_to_date(interest_date_str).map_err(|e| {
+                format!(
+                    "could not convert interest date string to date for sbanken transaction: {:?}",
+                    e
+                )
+            })?;
+            interest_date.push(s);
 
             archive_reference.push(sheet.get_value(&(String::from("C") + &row.to_string())));
             counter_account.push(sheet.get_value(&(String::from("D") + &row.to_string())));
@@ -86,24 +87,14 @@ impl SBanken {
             let out_of_account_str = sheet.get_value(&(String::from("G") + &row.to_string()));
             match out_of_account_str.parse::<f64>() {
                 Ok(f) => out_of_account.push(f.abs()),
-                Err(_) => {
-                    return Err(Error::new(
-                        ErrorKind::InvalidData,
-                        "could not parse string to f64",
-                    ))
-                }
-            };
+                Err(_) => return Err("could not parse out of account string to f64".into()),
+            }
 
             let into_account_str = sheet.get_value(&(String::from("H") + &row.to_string()));
             match into_account_str.parse::<f64>() {
                 Ok(f) => into_account.push(f),
-                Err(_) => {
-                    return Err(Error::new(
-                        ErrorKind::InvalidData,
-                        "could not parse string to f64",
-                    ))
-                }
-            };
+                Err(_) => return Err("could not parse into account string to f64".into()),
+            }
 
             row += 1;
         }
@@ -121,11 +112,8 @@ impl SBanken {
         Ok(sbanken)
     }
 
-    pub fn string_to_date(date: &str) -> Result<NaiveDate, Error> {
-        match excel::lib::string_to_date(date, ".") {
-            Ok(date) => Ok(date),
-            Err(_) => Err(Error::new(ErrorKind::InvalidData, "date str is not valid")),
-        }
+    pub fn string_to_date(date: &str) -> Result<NaiveDate, Box<dyn error::Error>> {
+        excel::lib::string_to_date(date, ".").map_err(|e| format!("date str is not valid: {:?}", e))
     }
 }
 

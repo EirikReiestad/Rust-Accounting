@@ -1,6 +1,7 @@
 use super::reading;
 use super::workbook;
 use chrono::NaiveDate;
+use std::error;
 use std::io::{Error, ErrorKind};
 
 pub fn get_month(
@@ -65,13 +66,10 @@ pub fn date_to_string(date: NaiveDate, delimiter: &str) -> String {
     date.format("%d.%m.%Y").to_string().replace(".", delimiter)
 }
 
-pub fn string_to_date(date: &str, delimiter: &str) -> Result<NaiveDate, Error> {
+pub fn string_to_date(date: &str, delimiter: &str) -> Result<NaiveDate, Box<dyn error::Error>> {
     let format = format!("%d{d}%m{d}%Y", d = delimiter);
-
-    match NaiveDate::parse_from_str(date, &format) {
-        Ok(date) => Ok(date),
-        Err(_) => Err(Error::new(ErrorKind::InvalidData, "date str is not valid")),
-    }
+    Ok(NaiveDate::parse_from_str(date, &format)
+        .map_err(|e| format!("date str is not valid: {:?}", e))?)
 }
 
 // checks if all vectors are the same length
