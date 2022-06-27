@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use std::io::{Error, ErrorKind};
+use std::error;
 
 use crate::excel;
 use crate::file;
@@ -34,20 +34,12 @@ pub struct SBanken {
 }
 
 impl SBanken {
-    pub fn get_transactions(path: &str) -> Result<Self, Error> {
-        let book = match file::lib::open_file(path) {
-            Ok(book) => book,
-            Err(_) => return Err(Error::new(ErrorKind::NotFound, "could not open workbook")),
-        };
-        let sheet = match book.get_sheet_by_name("Kontoutskrift") {
-            Ok(sheet) => sheet,
-            Err(_) => {
-                return Err(Error::new(
-                    ErrorKind::NotFound,
-                    "could not open workbook sheet",
-                ))
-            }
-        };
+    pub fn get_transactions(path: &str) -> Result<Self, Box<dyn error::Error>> {
+        let book =
+            file::lib::open_file(path).map_err(|e| format!("could not open workbook: {:?}", e))?;
+        let sheet = book
+            .get_sheet_by_name("Kontoutskrift")
+            .map_err(|e| format!("could not open worksheet 'Kontoutskrift': {:?}", e))?;
 
         let mut accounting_date = vec![];
         let mut interest_date = vec![];
@@ -76,13 +68,12 @@ impl SBanken {
             // interest date
             let interest_date_str =
                 &sheet.get_formatted_value(&(String::from("B") + &row.to_string()));
-                
             match SBanken::string_to_date(interest_date_str) {
                 Ok(s) => interest_date.push(s),
                 Err(_) => {
                     return Err(Error::new(
                         ErrorKind::InvalidData,
-                        "interest date is not valid",
+                        "interest date is not valid in bank sheet",
                     ))
                 }
             };
@@ -95,13 +86,23 @@ impl SBanken {
             let out_of_account_str = sheet.get_value(&(String::from("G") + &row.to_string()));
             match out_of_account_str.parse::<f64>() {
                 Ok(f) => out_of_account.push(f.abs()),
-                Err(_) => return Err(Error::new(ErrorKind::InvalidData, "could not parse string to f64")),
+                Err(_) => {
+                    return Err(Error::new(
+                        ErrorKind::InvalidData,
+                        "could not parse string to f64",
+                    ))
+                }
             };
 
             let into_account_str = sheet.get_value(&(String::from("H") + &row.to_string()));
             match into_account_str.parse::<f64>() {
                 Ok(f) => into_account.push(f),
-                Err(_) => return Err(Error::new(ErrorKind::InvalidData, "could not parse string to f64")),
+                Err(_) => {
+                    return Err(Error::new(
+                        ErrorKind::InvalidData,
+                        "could not parse string to f64",
+                    ))
+                }
             };
 
             row += 1;
