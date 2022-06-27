@@ -36,16 +36,10 @@ impl WorkbookInfo {
             || !lib::all_same_length(&string_vec)
             || !lib::all_same_length(&f64_vec)
         {
-            return Err(Error::new(
-                ErrorKind::InvalidData,
-                "different number of information",
-            ));
+            return Err("different number of information".into());
         }
         if &date_vec[0].len() != &string_vec[0].len() || &date_vec[0].len() != &f64_vec[0].len() {
-            return Err(Error::new(
-                ErrorKind::InvalidData,
-                "different number of information",
-            ));
+            return Err("different number of information".into());
         }
 
         Ok(WorkbookInfo {
