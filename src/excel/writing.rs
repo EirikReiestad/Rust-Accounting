@@ -312,3 +312,11 @@ pub fn re_date(
     let _ = writer::xlsx::write(&book, path);
     Ok(())
 }
+
+#[cfg(tests)]
+mod writing_tests {
+    use super::super::test_setup::initialize;
+    use super::*;
+
+    
+}
