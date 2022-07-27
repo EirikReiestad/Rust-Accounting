@@ -313,10 +313,24 @@ pub fn re_date(
     Ok(())
 }
 
-#[cfg(tests)]
+#[cfg(test)]
 mod writing_tests {
-    use super::super::test_setup::initialize;
+    use super::super::test_setup;
     use super::*;
 
-    
+    #[test]
+    fn test_write() -> Result<(), Box<dyn error::Error>> {
+        test_setup::initialize();
+        let mock_transaction = test_setup::create_mock_transactions()?;
+        write(
+            &mock_transaction.path,
+            mock_transaction.info,
+            &mock_transaction.categories,
+            &mock_transaction.date_delimiter,
+            &mock_transaction.date_month_style,
+            &mock_transaction.date_language,
+            &mock_transaction.date_capitalize,
+        )?;
+        Ok(())
+    }
 }

@@ -22,22 +22,22 @@ pub fn initialize_tests() -> Result<(), Box<dyn std::error::Error>> {
         Ok(_) => (),
         Err(_) => (),
     };
-    // copies the template and make it a test file
-    fs::copy("rustAccounting/src/templates/template.xlsx", "test.xlsx")?;
+    // copies the template and make it a test files
+    fs::copy("src/templates/template.xlsx", "test.xlsx").map_err(|e| format!("could not copy file: {:?}", e))?;
     Ok(())
 }
 
-struct MockTransaction {
-    path: String,
-    info: workbook::WorkbookInfo,
-    categories: reading::Categories,
-    date_delimiter: String,
-    date_month_style: String,
-    date_language: String,
-    date_capitalize: bool,
+pub struct MockTransaction {
+    pub path: String,
+    pub info: workbook::WorkbookInfo,
+    pub categories: reading::Categories,
+    pub date_delimiter: String,
+    pub date_month_style: String,
+    pub date_language: String,
+    pub date_capitalize: bool,
 }
 
-fn create_mock_transactions() -> Result<MockTransaction, Box<dyn std::error::Error>> {
+pub fn create_mock_transactions() -> Result<MockTransaction, Box<dyn std::error::Error>> {
     let path = String::from("test.xlsx");
     let size = 1000;
     let mut accounting_date = vec![];
