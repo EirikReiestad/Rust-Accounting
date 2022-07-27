@@ -11,3 +11,4 @@ Cargo.lock
 
 # This is a xlsx file used for testing and is generated when testing
 test.xlsx
+test.xlsxtmp

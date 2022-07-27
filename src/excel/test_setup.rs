@@ -37,9 +37,8 @@ pub struct MockTransaction {
     pub date_capitalize: bool,
 }
 
-pub fn create_mock_transactions() -> Result<MockTransaction, Box<dyn std::error::Error>> {
+pub fn create_mock_transactions(size: u32) -> Result<MockTransaction, Box<dyn std::error::Error>> {
     let path = String::from("test.xlsx");
-    let size = 1000;
     let mut accounting_date = vec![];
     let mut interest_date = vec![];
     let mut archive_reference = vec![];
@@ -50,8 +49,8 @@ pub fn create_mock_transactions() -> Result<MockTransaction, Box<dyn std::error:
     let mut into_account = vec![];
     let mut account = vec![];
     for i in 0..size {
-        accounting_date.push(NaiveDate::from_num_days_from_ce(i));
-        interest_date.push(NaiveDate::from_num_days_from_ce(i));
+        accounting_date.push(NaiveDate::from_num_days_from_ce(i as i32));
+        interest_date.push(NaiveDate::from_num_days_from_ce(i as i32));
         archive_reference.push(String::from("0"));
         counter_account.push(String::from("1"));
         types.push(String::from("types"));
