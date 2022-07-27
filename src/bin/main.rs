@@ -2,10 +2,7 @@
 
 use eframe::egui;
 
-mod accounting;
-mod excel;
-mod file;
-mod settings;
+use rust_accounting::settings;
 
 fn main() {
     let options = eframe::NativeOptions::default();
