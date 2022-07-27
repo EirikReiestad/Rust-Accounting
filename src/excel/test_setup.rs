@@ -27,7 +27,7 @@ pub fn initialize_tests() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub struct MockTransaction {
+struct MockTransaction {
     path: String,
     info: workbook::WorkbookInfo,
     categories: reading::Categories,
@@ -37,7 +37,7 @@ pub struct MockTransaction {
     date_capitalize: bool,
 }
 
-pub fn create_mock_transactions() -> Result<MockTransaction, Box<dyn std::error::Error>> {
+fn create_mock_transactions() -> Result<MockTransaction, Box<dyn std::error::Error>> {
     let path = String::from("test.xlsx");
     let size = 1000;
     let mut accounting_date = vec![];

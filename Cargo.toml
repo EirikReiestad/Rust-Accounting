@@ -10,3 +10,10 @@ eframe = "*"
 umya-spreadsheet = "0.7.2"
 chrono = "*"
 rfd = "*"
+
+[dev-dependencies]
+criterion = "0.3.6"
+
+[[bench]]
+name = "accounting_benchmark"
+harness = false
