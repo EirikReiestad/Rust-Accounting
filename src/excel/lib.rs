@@ -126,6 +126,7 @@ pub fn remove_duplicates(
     }
     wb
 }
+
 pub fn get_category(text: &str, types: &str, categories: &reading::Categories) -> (String, String) {
     for cat in &categories.from_type {
         if types.to_lowercase().contains(&cat[0].to_lowercase()) {

@@ -1,13 +1,21 @@
-use rust_accounting::{accounting, excel, file, settings};
+use rust_accounting::{excel};
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
+
+const MOCK_TRANSACTIONS: u32= 100;
+
+fn create_mock_transactions_benchmark(c: &mut Criterion) -> Result<(), Box<dyn std::error::Error>> {
+    let _  = excel::test_setup::create_mock_transactions(MOCK_TRANSACTIONS).map_err(|e| format!("{:?}", e))?;
+    Ok(())
+}
 
 fn write_benchmark(c: &mut Criterion) -> Result<(), Box<dyn std::error::Error>> {
+    // the problem with this is that it is testing the test_setup initialize in the benchmark... as well as creating mock transaction
     c.bench_function("write", |b| {
         b.iter(|| {
             excel::test_setup::initialize();
             // could optimize more, meaning not creating mock transaction for each iteration
-            let mock = excel::test_setup::create_mock_transactions(1000)?;
+            let mock = excel::test_setup::create_mock_transactions(MOCK_TRANSACTIONS)?;
             excel::writing::write(
                 &mock.path,
                 mock.info,
@@ -22,18 +30,21 @@ fn write_benchmark(c: &mut Criterion) -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
-fn same_path_benchmark(c: &mut Criterion) {
-    c.bench_function("same path", |b| {
-        b.iter(|| settings::lib::same_path("/test/", "/test/"))
-    });
-}
+// fn remove_duplicates_benchmark(c: &mut Criterion) -> Result<(), Box<dyn std::error::Error>> {
 
+// }
+
+criterion_group!{
+    name = benches_creating_mock_transactions;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().significance_level(0.1).sample_size(10);
+    targets = create_mock_transactions_benchmark
+}
 criterion_group!{
     name = benches_excel;
     // This can be any expression that returns a `Criterion` object.
     config = Criterion::default().significance_level(0.1).sample_size(10);
     targets = write_benchmark
 }
-criterion_group!(benches_functions, same_path_benchmark, write_benchmark);
-criterion_main!(benches_excel);
-criterion_main!(benches_functions);
+criterion_group!(benches, create_mock_transactions_benchmark);
+criterion_main!(benches);
