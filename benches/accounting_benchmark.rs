@@ -46,5 +46,5 @@ criterion_group!{
     config = Criterion::default().significance_level(0.1).sample_size(10);
     targets = write_benchmark
 }
-criterion_group!(benches, create_mock_transactions_benchmark);
-criterion_main!(benches);
+
+criterion_main!(benches_creating_mock_transactions);
