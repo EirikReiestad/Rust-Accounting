@@ -54,6 +54,19 @@ impl WorkbookInfo {
             account: account,
         })
     }
+    pub fn clone(&self) -> Result<Self, Box<dyn error::Error>> {
+        Ok(WorkbookInfo {
+            accounting_date: self.accounting_date.iter().map(|v| v.clone()).collect(),
+            interest_date: self.interest_date.iter().map(|v| v.clone()).collect(),
+            archive_reference: self.archive_reference.iter().map(|v| v.clone()).collect(),
+            counter_account: self.counter_account.iter().map(|v| v.clone()).collect(),
+            types: self.types.iter().map(|v| v.clone()).collect(),
+            text: self.text.iter().map(|v| v.clone()).collect(),
+            out_of_account: self.out_of_account.iter().map(|v| v.clone()).collect(),
+            into_account: self.into_account.iter().map(|v| v.clone()).collect(),
+            account: self.account.iter().map(|v| v.clone()).collect(),
+        })
+    }
 }
 
 #[cfg(test)]

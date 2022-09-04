@@ -321,7 +321,7 @@ mod writing_tests {
     #[test]
     fn test_write() -> Result<(), Box<dyn error::Error>> {
         test_setup::initialize();
-        let mock_transaction = test_setup::create_mock_transactions(1000)?;
+        let mock_transaction = test_setup::create_mock_transactions(1000, None)?;
         write(
             &mock_transaction.path,
             &mock_transaction.info,
