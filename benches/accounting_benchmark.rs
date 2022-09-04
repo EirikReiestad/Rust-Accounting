@@ -34,9 +34,9 @@ fn write_benchmark(c: &mut Criterion) -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
-// fn remove_duplicates_benchmark(c: &mut Criterion) -> Result<(), Box<dyn std::error::Error>> {
-
-// }
+fn remove_duplicates_benchmark(c: &mut Criterion) -> Result<(), Box<dyn std::error::Error>> {
+    let mock = excel::test_setup::create_mock_transactions(MOCK_TRANSACTIONS)?;
+}
 
 criterion_group!{
     name = benches_creating_mock_transactions;
@@ -45,11 +45,11 @@ criterion_group!{
     targets = create_mock_transactions_benchmark
 }
 
-// criterion_group!{
-//     name = benches_excel;
-//     // This can be any expression that returns a `Criterion` object.
-//     config = Criterion::default().significance_level(0.1).sample_size(10);
-//     targets = write_benchmark
-// }
+criterion_group!{
+    name = benches_excel;
+    // This can be any expression that returns a `Criterion` object.
+    config = Criterion::default().significance_level(0.1).sample_size(10);
+    targets = write_benchmark
+}
 
 criterion_main!(benches_creating_mock_transactions);

@@ -37,7 +37,8 @@ pub struct MockTransaction {
     pub date_capitalize: bool,
 }
 
-pub fn create_mock_transactions(size: u32) -> Result<MockTransaction, Box<dyn std::error::Error>> {
+pub fn create_mock_transactions(size: u32, signature: Option<String>) -> Result<MockTransaction, Box<dyn std::error::Error>> {
+    // Want to add a signature if needed to make a unique mock_transaction
     let path = String::from("test.xlsx");
     let mut accounting_date = vec![];
     let mut interest_date = vec![];
@@ -54,7 +55,11 @@ pub fn create_mock_transactions(size: u32) -> Result<MockTransaction, Box<dyn st
         archive_reference.push(String::from("0"));
         counter_account.push(String::from("1"));
         types.push(String::from("types"));
-        text.push(String::from("text"));
+        let t: &str = match &signature {
+            Some(s) => s,
+            _ => "text",
+        };
+        text.push(String::from(t));
         out_of_account.push(0.0);
         into_account.push(0.0);
         account.push(String::from("0"))
