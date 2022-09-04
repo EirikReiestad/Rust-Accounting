@@ -25,7 +25,7 @@ pub fn write_to_workbook(
             let transaction_info = lib::remove_duplicates(transaction_info, workbook_info);
             write(
                 &workbook_path,
-                transaction_info,
+                &transaction_info,
                 categories,
                 date_delimiter,
                 date_month_style,
@@ -39,7 +39,7 @@ pub fn write_to_workbook(
 
 pub fn write(
     path: &str,
-    info: workbook::WorkbookInfo,
+    info: &workbook::WorkbookInfo,
     categories: &reading::Categories,
     date_delimiter: &str,
     date_month_style: &str,
@@ -324,7 +324,7 @@ mod writing_tests {
         let mock_transaction = test_setup::create_mock_transactions(1000)?;
         write(
             &mock_transaction.path,
-            mock_transaction.info,
+            &mock_transaction.info,
             &mock_transaction.categories,
             &mock_transaction.date_delimiter,
             &mock_transaction.date_month_style,

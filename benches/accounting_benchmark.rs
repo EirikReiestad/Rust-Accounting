@@ -5,20 +5,24 @@ use criterion::{criterion_group, criterion_main, Criterion};
 const MOCK_TRANSACTIONS: u32= 100;
 
 fn create_mock_transactions_benchmark(c: &mut Criterion) -> Result<(), Box<dyn std::error::Error>> {
-    let _  = excel::test_setup::create_mock_transactions(MOCK_TRANSACTIONS).map_err(|e| format!("{:?}", e))?;
+    c.bench_function("create_mock_transactions", |b| {
+        b.iter(|| {
+            let _  = excel::test_setup::create_mock_transactions(MOCK_TRANSACTIONS).map_err(|e| format!("{:?}", e));
+        })
+    });
     Ok(())
 }
 
 fn write_benchmark(c: &mut Criterion) -> Result<(), Box<dyn std::error::Error>> {
     // the problem with this is that it is testing the test_setup initialize in the benchmark... as well as creating mock transaction
+    let mock = excel::test_setup::create_mock_transactions(MOCK_TRANSACTIONS)?;
     c.bench_function("write", |b| {
         b.iter(|| {
             excel::test_setup::initialize();
             // could optimize more, meaning not creating mock transaction for each iteration
-            let mock = excel::test_setup::create_mock_transactions(MOCK_TRANSACTIONS)?;
             excel::writing::write(
                 &mock.path,
-                mock.info,
+                &mock.info,
                 &mock.categories,
                 &mock.date_delimiter,
                 &mock.date_month_style,
